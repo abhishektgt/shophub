@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, ShoppingCart, Search, Filter, Star, LogOut, Menu, X } from 'lucide-react';
+import { User, ShoppingCart, Search, Filter, Star, LogOut, Menu, X , Heart} from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -10,7 +10,9 @@ const PostLoginDashboard = () => {
   const [currentView, setCurrentView] = useState('products'); // 'products' or 'profile'
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [categories, setCategories] = useState([]);
   const [cart, setCart] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate(); // 
@@ -74,8 +76,10 @@ const PostLoginDashboard = () => {
     const token = localStorage.getItem("token");
     if (token) {
       const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
+      const savedWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
       console.error("Saved cart:", savedCart);
       setCart(savedCart);
+      setWishlist(savedWishlist);
     }
   }, []);
 
@@ -98,6 +102,23 @@ const PostLoginDashboard = () => {
       }
     };
 
+    const saveWishlist = async (newWishlist) => {
+      setWishlist(newWishlist);
+      localStorage.setItem("wishlist", JSON.stringify(newWishlist));
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        await axios.post(
+          `${API_BASE}/wishlist`,
+          { wishlist: newWishlist },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch (err) {
+        console.error("Error saving wishlist:", err);
+      }
+    };
+
 
 
 
@@ -112,6 +133,16 @@ const PostLoginDashboard = () => {
       saveCart([...cart, { ...product, quantity: 1 }]);
     }
   };
+
+  const toggleWishlist = (product) => {
+    if (wishlist.some(item => item._id === product._id)){
+      saveWishlist(wishlist.filter(item => item._id !== product._id));
+    } else {
+      saveWishlist([...wishlist, product]);
+    }
+  };
+
+
 
   const removeFromCart = (productId) => {
     saveCart(cart.filter(item => item._id !== productId));
@@ -196,6 +227,19 @@ const PostLoginDashboard = () => {
               </button>
             </div>
           )}
+
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setCurrentView('wishlist')}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                currentView === 'wishlist' 
+                  ? 'text-indigo-600 bg-indigo-50' 
+                  : 'text-gray-700 hover:text-indigo-600'
+              }`}
+            >
+              Wishlist
+            </button>
+          </div>
 
           <div className="flex items-right space-x-4">
             <button
@@ -324,7 +368,10 @@ const PostLoginDashboard = () => {
       {/* Products Grid */}
       {!loading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredProducts.map(product => (
+          {filteredProducts.map(product => {
+          const isLiked = wishlist.some(item => item._id === product._id);
+
+          return (
             <div key={product._id} className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
               <div className="aspect-square bg-gray-100 overflow-hidden">
                 <img
@@ -368,10 +415,18 @@ const PostLoginDashboard = () => {
                     <ShoppingCart className="w-4 h-4" />
                     <span>Add to Cart</span>
                   </button>
+                  <button onClick={() => toggleWishlist(product)} className="p-2 hover:scale-110 transition-transform duration-200">
+                    <Heart
+                      size={24}
+                      color={isLiked ? "red" : "gray"}
+                      fill={isLiked ? "red" : "none"}
+                    />
+                  </button>
+                  
                 </div>
               </div>
             </div>
-          ))}
+          );})}
         </div>
       )}
       
@@ -560,6 +615,41 @@ const PostLoginDashboard = () => {
     </div>
   );
 
+  const wishlistView = () => (
+    <div className="bg-white rounded-xl shadow-md p-6">
+      <h3 className="text-xl font-medium text-gray-900 mb-4">Your Wishlist</h3>
+      {wishlist.length === 0 ? (
+        <p className="text-gray-600">Your wishlist is empty</p>
+      ) : (
+        <ul className="space-y-4">
+          {wishlist.map(item => (
+            <li key={item._id} className="flex items-center space-x-4">
+              <img
+                src={item.img}
+                alt={item.name}
+                className="w-16 h-16 object-cover rounded-lg"
+                onError={(e) => {
+                  e.target.src = 'https://via.placeholder.com/64x64/f3f4f6/9ca3af?text=No+Image';
+                }}
+              />
+              <div className="flex-1">
+                <h4 className="font-medium text-gray-900">{item.name}</h4>
+                <p className="text-sm text-gray-600">{item.brand}</p>
+                <p className="text-lg font-semibold text-indigo-600">${item.price}</p>
+              </div>
+              <button
+                onClick={() => toggleWishlist(item)}
+                className="ml-4 text-red-600 hover:text-red-800 transition-colors"
+              >
+                Remove
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -567,6 +657,9 @@ const PostLoginDashboard = () => {
       {currentView === 'products' && <ProductsView />}
       {currentView === 'profile' && <ProfileView />}
       {currentView === 'cart' && <CartView />}
+      {currentView === 'wishlist' && wishlistView()}
+
+      {/* Footer */}
     </div>
   );
 };

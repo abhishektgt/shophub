@@ -18,8 +18,8 @@ def signup():
         "name": data["name"],
         "email": data["email"],
         "password": hashed_pw,
-        "cart": []  # empty cart at start
-
+        "cart": [],  # empty cart at start
+        "wishlist": []  # empty wishlist at start
     })
     return jsonify({"message": "User created successfully"}), 201
 
@@ -37,6 +37,7 @@ def login():
     }, current_app.config["SECRET_KEY"], algorithm="HS256")
 
     user_cart = user.get("cart", [])
+    user_wishlist = user.get("wishlist", [])
     if not user_cart:
         user_cart = []
 
@@ -46,8 +47,8 @@ def login():
         "user": {
             "email": user["email"],
             "name": user.get("name", ""),
-            "cart": user_cart
-
+            "cart": user_cart,
+            "wishlist": user_wishlist
         }
     })
 
@@ -96,6 +97,21 @@ def save_cart(current_user):
     )
     print("cart details", cart)
     return jsonify({"message": "Cart saved"}), 200
+
+
+@auth_bp.route('/wishlist', methods=['POST'])
+@token_required
+def save_wishlist(current_user):
+    data = request.get_json()
+    wishlist = data.get('wishlist', [])
+    users.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {"wishlist": wishlist}}
+    )
+    print("wishlist details", wishlist)
+    return jsonify({"message": "Wishlist saved"}), 200
+        
+
 
 
 @auth_bp.route('/cart', methods=['GET'])
