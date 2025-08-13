@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, ShoppingCart, Search, Filter, Star, LogOut, Menu, X } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const PostLoginDashboard = () => {
@@ -12,6 +13,7 @@ const PostLoginDashboard = () => {
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate(); // 
 
   const API_BASE = 'http://localhost:5000';
   const token = localStorage.getItem('token');
@@ -81,6 +83,7 @@ const PostLoginDashboard = () => {
   // Cart functions
     const saveCart = async (newCart) => {
       setCart(newCart);
+      localStorage.setItem("cart", JSON.stringify(newCart));
       const token = localStorage.getItem("token");
       if (!token) return;
 
@@ -177,8 +180,24 @@ const PostLoginDashboard = () => {
               Profile
             </button>
           </nav>
-          
-          <div className="flex items-center space-x-4">
+
+          {/* login  page button */}
+          {!localStorage.getItem("token") && (
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/login')}
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  currentView === 'login' 
+                    ? 'text-indigo-600 bg-indigo-50' 
+                    : 'text-gray-700 hover:text-indigo-600'
+                }`}
+              >
+                Login
+              </button>
+            </div>
+          )}
+
+          <div className="flex items-right space-x-4">
             <button
               onClick={() => setCurrentView('cart')}
               className="relative p-2 text-gray-600 hover:text-indigo-600 transition-colors"

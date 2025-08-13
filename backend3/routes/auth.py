@@ -37,6 +37,10 @@ def login():
     }, current_app.config["SECRET_KEY"], algorithm="HS256")
 
     user_cart = user.get("cart", [])
+    if not user_cart:
+        user_cart = []
+
+    print("user cart", user_cart)  
     return jsonify({
         "token": token,
         "user": {
@@ -90,6 +94,7 @@ def save_cart(current_user):
         {"_id": current_user["_id"]},
         {"$set": {"cart": cart}}
     )
+    print("cart details", cart)
     return jsonify({"message": "Cart saved"}), 200
 
 

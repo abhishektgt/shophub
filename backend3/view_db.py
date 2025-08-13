@@ -9,11 +9,11 @@ client = MongoClient(Config.MONGODB_URI)  # For local MongoDB
 db = client["ecommerce"]
 
 # 3. Choose the collection
-collection = db["products"]
+collection = db["users"]
 
-result = collection.delete_many({})
+#result = collection.delete_many({})
 
-print(f"{result.deleted_count} documents deleted.")
+#print(f"{result.deleted_count} documents deleted.")
 
 # 4. Fetch and print all documents
 for document in collection.find():

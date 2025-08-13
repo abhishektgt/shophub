@@ -20,11 +20,14 @@ const Login = ({ onLogin }) => {
         password,
       });
 
-      const { token, user , cart} = response.data;
+      const { token, user} = response.data;
 
       localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("cart", JSON.stringify(cart || [])); // Save cart
+      localStorage.setItem("user", JSON.stringify(user.name));
+      localStorage.setItem("cart", JSON.stringify(user.cart || [])); // Save cart
+
+      const savedCart = JSON.parse(localStorage.getItem("user.cart") || "[]");
+      console.log("cart details", savedCart);
 
       if (onLogin) onLogin(user);
 
