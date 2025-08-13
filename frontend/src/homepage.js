@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, ShoppingCart, Search, Filter, Star, LogOut, Menu, X , Heart} from 'lucide-react';
 import { useNavigate } from "react-router-dom";
+import OrdersView from "./checkout";
 import axios from "axios";
 
 const PostLoginDashboard = () => {
@@ -13,6 +14,8 @@ const PostLoginDashboard = () => {
   const [categories, setCategories] = useState([]);
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [order, setOrder] = useState([]);
   const [loading, setLoading] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate(); // 
@@ -77,9 +80,11 @@ const PostLoginDashboard = () => {
     if (token) {
       const savedCart = JSON.parse(localStorage.getItem("cart") || "[]");
       const savedWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+      const savedOrders = JSON.parse(localStorage.getItem("orders") || "[]");
       console.error("Saved cart:", savedCart);
       setCart(savedCart);
       setWishlist(savedWishlist);
+      setOrders(savedOrders);
     }
   }, []);
 
@@ -119,9 +124,23 @@ const PostLoginDashboard = () => {
       }
     };
 
+    const saveOrders = async (newOrders) => {
+      setOrders(newOrders);
+      localStorage.setItem("orders", JSON.stringify(newOrders));
+      console.log("Saving orders:", newOrders);
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
-
-
+      try {
+        await axios.post(
+          `${API_BASE}/orders`,
+          { orders: newOrders },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch (err) {
+        console.error("Error saving orders:", err);
+      }
+    };
 
   const addToCart = (product) => {
     const existingItem = cart.find(item => item._id === product._id);
@@ -170,6 +189,9 @@ const PostLoginDashboard = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('cart');
+    localStorage.removeItem('wishlist');
+    localStorage.removeItem('orders');
+
     window.location.reload(); // Redirect to login
   };
 
@@ -605,9 +627,23 @@ const PostLoginDashboard = () => {
               >
                 Continue Shopping
               </button>
-              <button className="flex-1 bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-colors">
+              <button
+                onClick={() => {
+                  // Save current cart as new order
+                  //const newOrder = [...cart]; // copy cart items
+                  //localStorage.setItem("currentOrder", JSON.stringify(newOrder));
+                  //navigate("/checkout");
+                  // const updatedOrders = [...orders, ...newOrder]; // append to previous orders
+
+                  // saveOrders(updatedOrders); // save to localStorage + backend
+                  //setOrder(newOrder);        // set current order for checkout page
+                  setCurrentView('checkout'); // navigate to checkout
+                }}
+                className="flex-1 bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-colors"
+              >
                 Checkout
               </button>
+
             </div>
           </div>
         </div>
@@ -650,6 +686,10 @@ const PostLoginDashboard = () => {
     </div>
   );
 
+
+  
+
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -658,6 +698,17 @@ const PostLoginDashboard = () => {
       {currentView === 'profile' && <ProfileView />}
       {currentView === 'cart' && <CartView />}
       {currentView === 'wishlist' && wishlistView()}
+      {currentView === "checkout" && (
+        <OrdersView
+          cart={cart}
+          setCart={setCart}
+          orders={orders}
+          setOrders={setOrders}
+          saveOrders={saveOrders}
+          setCurrentView={setCurrentView}
+          saveCart={saveCart}
+        />
+      )}
 
       {/* Footer */}
     </div>

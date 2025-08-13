@@ -26,7 +26,7 @@ const Login = ({ onLogin }) => {
       localStorage.setItem("user", JSON.stringify(user.name));
       localStorage.setItem("cart", JSON.stringify(user.cart || [])); // Save cart
       localStorage.setItem("wishlist", JSON.stringify(user.wishlist || [])); // Save wishlist
-
+      localStorage.setItem("orders", JSON.stringify(user.orders || [])); // Save orders
       const savedCart = JSON.parse(localStorage.getItem("user.cart") || "[]");
       console.log("cart details", savedCart);
 
