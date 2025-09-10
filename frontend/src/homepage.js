@@ -34,7 +34,7 @@ const PostLoginDashboard = () => {
 
   const navigate = useNavigate(); // 
 
-  const API_BASE = 'http://localhost:5000';
+  const API_BASE = 'https://shophub-oc39.onrender.com';
   const token = localStorage.getItem('token');
 
   // Fetch user profile
@@ -218,7 +218,7 @@ const PostLoginDashboard = () => {
     // fetchRecommendations();
   }, []);
   useEffect(() => {
-    fetch(`http://localhost:5000/recommendations`, {headers: {'Authorization': `Bearer ${token}`}})
+    fetch(`https://shophub-oc39.onrender.com/recommendations`, {headers: {'Authorization': `Bearer ${token}`}})
       .then(res => res.json())
       .then(data => {
    

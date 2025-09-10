@@ -17,7 +17,7 @@ export default function Signup() {
     e.preventDefault();
     setMessage("");
     try {
-      const res = await axios.post("http://localhost:5000/signup", form);
+      const res = await axios.post("https://shophub-oc39.onrender.com/signup", form);
       setMessage("✅ User signed up successfully!");
       setForm({
         name: "",
