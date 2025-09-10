@@ -6,7 +6,7 @@ import Signup from './signup.js';
 import Login from './login.js';
 import Homepage from './homepage.js';
 
-
+import Test_homepage from './test_homepage.js'; 
 
 
 
@@ -17,7 +17,8 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path= "/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/homepage" element={<Homepage />} /> 
+          <Route path="/homepage" element={<Homepage />} />
+          <Route path="/test_homepage" element={<Test_homepage />} />
         </Routes>
 
       </Router>

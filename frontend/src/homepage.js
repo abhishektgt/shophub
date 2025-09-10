@@ -7,6 +7,7 @@ import axios from "axios";
 const PostLoginDashboard = () => {
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
+  const [recs, setRecs] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [currentView, setCurrentView] = useState('products'); // 'products' or 'profile'
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,6 +19,19 @@ const PostLoginDashboard = () => {
   const [order, setOrder] = useState([]);
   const [loading, setLoading] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 12;
+
+  // Calculate indexes
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+
+  // Slice products
+  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+
+  // Total pages
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+
   const navigate = useNavigate(); // 
 
   const API_BASE = 'http://localhost:5000';
@@ -54,25 +68,26 @@ const PostLoginDashboard = () => {
     setLoading(false);
   };
 
-  // Filter products based on search and category
-  useEffect(() => {
-    let filtered = products;
-    
-    if (searchTerm) {
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    if (selectedCategory) {
-      filtered = filtered.filter(product => product.category === selectedCategory);
-    }
-    
-    setFilteredProducts(filtered);
-  }, [searchTerm, selectedCategory, products]);
+  // const fetchRecommendations = async () => {
+  //   // if (!user) return;
+  //   try {
+  //     const response = await fetch(`${API_BASE}/recommendations`, {
+  //       headers: { 'Authorization': `Bearer ${token}` }
+  //     });
+  //     const data = await response.json();
+  //     if (response.ok) {
+  //       setRecs(data);
+  //     }
+  //   } catch (error) {
+  //     console.error('Failed to fetch recommendations');
+  //   }
+  // };
 
+  // Filter products based on search and category
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentPage]);
 
 
   useEffect(() => {
@@ -185,6 +200,7 @@ const PostLoginDashboard = () => {
     return [...new Set(products.map(product => product.category))];
   };
 
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -199,7 +215,37 @@ const PostLoginDashboard = () => {
   useEffect(() => {
     fetchProfile();
     fetchProducts();
+    // fetchRecommendations();
   }, []);
+  useEffect(() => {
+    fetch(`http://localhost:5000/recommendations`, {headers: {'Authorization': `Bearer ${token}`}})
+      .then(res => res.json())
+      .then(data => {
+   
+        setRecs(data.recommendations || []);
+      });
+  }, []);
+  console.error("Recommendations:", recs);
+
+  useEffect(() => {
+    let filtered = products;
+    
+    if (searchTerm) {
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    if (selectedCategory) {
+      filtered = filtered.filter(product => product.category === selectedCategory);
+    }
+    
+    setFilteredProducts(filtered);
+  }, [searchTerm, selectedCategory, products]);
+
+ 
 
   // Header Component
   const Header = () => (
@@ -343,7 +389,13 @@ const PostLoginDashboard = () => {
   );
 
   // Products View
-  const ProductsView = () => (
+    // Products View
+  const ProductsView = () => {
+      
+
+    return(
+
+
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">Products</h2>
@@ -389,67 +441,171 @@ const PostLoginDashboard = () => {
       
       {/* Products Grid */}
       {!loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredProducts.map(product => {
-          const isLiked = wishlist.some(item => item._id === product._id);
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {currentProducts.map(product => {
+              const isLiked = wishlist.some(item => item._id === product._id);
 
-          return (
-            <div key={product._id} className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
-              <div className="aspect-square bg-gray-100 overflow-hidden">
-                <img
-                  src={product.img}
-                  alt={product.name}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/300x300/f3f4f6/9ca3af?text=No+Image';
-                  }}
-                />
-              </div>
-              
-              <div className="p-6">
-                <div className="mb-3 flex justify-between items-start">
-                  <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
-                    {product.brand}
-                  </span>
-                  <div className="flex items-center">
-                    <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                    <span className="text-xs text-gray-600 ml-1">4.5</span>
+              return (
+                <div key={product._id} className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
+                  <div className="aspect-square bg-gray-100 overflow-hidden">
+                    <img
+                      src={product.img}
+                      alt={product.name}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        e.target.src = 'https://via.placeholder.com/300x300/f3f4f6/9ca3af?text=No+Image';
+                      }}
+                    />
+                  </div>
+                  
+                  <div className="p-6">
+                    <div className="mb-3 flex justify-between items-start">
+                      <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+                        {product.brand}
+                      </span>
+                      <div className="flex items-center">
+                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                        <span className="text-xs text-gray-600 ml-1">4.5</span>
+                      </div>
+                    </div>
+                    
+                    <h3 className="font-semibold text-gray-800 mb-2 text-sm leading-tight line-clamp-2">
+                      {product.name}
+                    </h3>
+                    
+                    <p className="text-gray-600 text-xs mb-4 line-clamp-2">
+                      {product.description}
+                    </p>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl font-bold text-indigo-600">
+                        ${product.price}
+                      </span>
+                      
+                      <button
+                        onClick={() => addToCart(product)}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
+                      >
+                        <ShoppingCart className="w-4 h-4" />
+                        <span>Add to Cart</span>
+                      </button>
+                      <button onClick={() => toggleWishlist(product)} className="p-2 hover:scale-110 transition-transform duration-200">
+                        <Heart
+                          size={24}
+                          color={isLiked ? "red" : "gray"}
+                          fill={isLiked ? "red" : "none"}
+                        />
+                      </button>
+                      
+                    </div>
                   </div>
                 </div>
-                
-                <h3 className="font-semibold text-gray-800 mb-2 text-sm leading-tight line-clamp-2">
-                  {product.name}
-                </h3>
-                
-                <p className="text-gray-600 text-xs mb-4 line-clamp-2">
-                  {product.description}
-                </p>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold text-indigo-600">
-                    ${product.price}
-                  </span>
-                  
-                  <button
-                    onClick={() => addToCart(product)}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
-                  >
-                    <ShoppingCart className="w-4 h-4" />
-                    <span>Add to Cart</span>
-                  </button>
-                  <button onClick={() => toggleWishlist(product)} className="p-2 hover:scale-110 transition-transform duration-200">
-                    <Heart
-                      size={24}
-                      color={isLiked ? "red" : "gray"}
-                      fill={isLiked ? "red" : "none"}
-                    />
-                  </button>
-                  
-                </div>
+              );
+            })}
+          </div>
+          <div className="flex justify-center items-center space-x-2 mt-6">
+            {/* Previous button */}
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border rounded-lg text-sm disabled:opacity-50"
+            >
+              Prev
+            </button>
+
+            {/* Page numbers */}
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-3 py-1 border rounded-lg text-sm ${
+                  currentPage === i + 1 ? "bg-indigo-600 text-white" : "bg-white"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            {/* Next button */}
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 border rounded-lg text-sm disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+          
+
+          {/* Recommendations */}
+          {recs.length > 0 && (
+            <div className="mt-12">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Recommended For You</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {recs.map(product => {
+                  const isLiked = wishlist.some(item => item._id === product._id);
+
+                  return (
+                    <div key={product._id} className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden">
+                      <div className="aspect-square bg-gray-100 overflow-hidden">
+                        <img
+                          src={product.img}
+                          alt={product.name}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            e.target.src = 'https://via.placeholder.com/300x300/f3f4f6/9ca3af?text=No+Image';
+                          }}
+                        />
+                      </div>
+                      
+                      <div className="p-6">
+                        <div className="mb-3 flex justify-between items-start">
+                          <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+                            {product.brand}
+                          </span>
+                          <div className="flex items-center">
+                            <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                            <span className="text-xs text-gray-600 ml-1">4.5</span>
+                          </div>
+                        </div>
+                        
+                        <h3 className="font-semibold text-gray-800 mb-2 text-sm leading-tight line-clamp-2">
+                          {product.name}
+                        </h3>
+                        
+                        <p className="text-gray-600 text-xs mb-4 line-clamp-2">
+                          {product.description}
+                        </p>
+                        
+                        <div className="flex items-center justify-between">
+                          <span className="text-2xl font-bold text-indigo-600">
+                            ${product.price}
+                          </span>
+                          
+                          <button
+                            onClick={() => addToCart(product)}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
+                          >
+                            <ShoppingCart className="w-4 h-4" />
+                            <span>Add to Cart</span>
+                          </button>
+                          <button onClick={() => toggleWishlist(product)} className="p-2 hover:scale-110 transition-transform duration-200">
+                            <Heart
+                              size={24}
+                              color={isLiked ? "red" : "gray"}
+                              fill={isLiked ? "red" : "none"}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          );})}
-        </div>
+          )}
+        </>
       )}
       
       {/* No products found */}
@@ -464,6 +620,8 @@ const PostLoginDashboard = () => {
       )}
     </div>
   );
+};
+
 
   // Profile View
   const ProfileView = () => (
