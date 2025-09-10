@@ -4,6 +4,7 @@ Flask-JWT-Extended
 Flask-PyMongo
 fastapi
 uvicorn
+gunicorn
 
 tensorflow==2.20.0
 torch==2.7.0
