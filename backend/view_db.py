@@ -33,7 +33,7 @@ client = MongoClient(Config.MONGODB_URI)
 db = client["ecommerce"]
 
 # 3. Choose the collection
-collection = db["products"]
+collection = db["users"]
 
 # Delete ALL users from the collection
 # result = collection.delete_many({})
